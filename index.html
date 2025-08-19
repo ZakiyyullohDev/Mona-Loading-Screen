@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mona Lofi</title>
-    <link rel="icon" href="mona-loading-dark-7701a7b97370.gif">
+    <title>Mona Lofi Player</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="mona-loading-dark-7701a7b97370.gif">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <button class="fullscreen-btn" title="Toggle Fullscreen">
@@ -14,15 +14,15 @@
     </button>
     
     <div class="error-message" id="error-message"></div>
-
+    
     <div class="center">
-        <img class="mona-gif" src="mona-loading-dark-7701a7b97370.gif" alt="Mona Lofi">
+        <img class="mone-gif" src="mona-loading-dark-7701a7b97370.gif" alt="Mona Lofi">
     </div>
-
+    
     <div class="current-track" id="current-track">
         Lofi.co Stream
     </div>
-
+    
     <div class="player-container">
         <div class="station-selector">
             <button class="station-btn active" data-station="lofi" title="Lofi Hip Hop Radio">
@@ -65,21 +65,21 @@
             <i class="fab fa-youtube"></i> YouTube
         </button>
     </div>
-
+    
     <div class="youtube-modal" id="youtube-modal">
         <div class="youtube-form">
             <button class="close-modal" id="close-youtube-top">
                 <i class="fas fa-times"></i>
             </button>
-            <h3>Add YouTube Music</h3>
-            <input type="text" id="youtube-url" placeholder="Paste YouTube URL or Video ID">
+            <h3><i class="fab fa-youtube"></i> YouTube Video Qo'shish</h3>
+            <input type="text" id="youtube-url" placeholder="YouTube linkini yoki video ID sini kiriting">
             <div class="form-buttons">
-                <button id="add-youtube">Play</button>
-                <button id="close-youtube">Cancel</button>
+                <button id="add-youtube"><i class="fas fa-play"></i> Play</button>
+                <button id="close-youtube"><i class="fas fa-times"></i> Bekor Qilish</button>
             </div>
         </div>
     </div>
-
+    
     <audio id="audio"></audio>
     <div id="youtube-iframe"></div>
     

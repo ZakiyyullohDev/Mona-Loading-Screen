@@ -1,38 +1,37 @@
-const audio = document.getElementById('audio');
-const playBtn = document.getElementById('play-btn');
-const prevBtn = document.getElementById('prev-btn');
-const nextBtn = document.getElementById('next-btn');
-const progressContainer = document.getElementById('progress-container');
-const progress = document.getElementById('progress');
-const currentTimeEl = document.getElementById('current-time');
-const totalTimeEl = document.getElementById('total-time');
-const volumeSlider = document.getElementById('volume-slider');
-const youtubeBtn = document.getElementById('youtube-btn');
-const youtubeModal = document.getElementById('youtube-modal');
-const youtubeUrl = document.getElementById('youtube-url');
-const addYoutubeBtn = document.getElementById('add-youtube');
-const closeYoutubeBtn = document.getElementById('close-youtube');
-const closeYoutubeTopBtn = document.getElementById('close-youtube-top');
-const currentTrack = document.getElementById('current-track');
-const fullscreenBtn = document.querySelector('.fullscreen-btn');
-const errorMessage = document.getElementById('error-message');
-const stationButtons = document.querySelectorAll('.station-btn');
-
-let currentStream = 'audio';
-let isPlaying = false;
-let ytPlayer;
-let youtubeAPILoaded = false;
-let currentStation = 'lofi';
-
-// Lofi stansiyalar
-const stations = {
+ const audio = document.getElementById('audio');
+ const playBtn = document.getElementById('play-btn');
+ const prevBtn = document.getElementById('prev-btn');
+ const nextBtn = document.getElementById('next-btn');
+ const progressContainer = document.getElementById('progress-container');
+ const progress = document.getElementById('progress');
+ const currentTimeEl = document.getElementById('current-time');
+ const totalTimeEl = document.getElementById('total-time');
+ const volumeSlider = document.getElementById('volume-slider');
+ const youtubeBtn = document.getElementById('youtube-btn');
+ const youtubeModal = document.getElementById('youtube-modal');
+ const youtubeUrl = document.getElementById('youtube-url');
+ const addYoutubeBtn = document.getElementById('add-youtube');
+ const closeYoutubeBtn = document.getElementById('close-youtube');
+ const closeYoutubeTopBtn = document.getElementById('close-youtube-top');
+ const currentTrack = document.getElementById('current-track');
+ const fullscreenBtn = document.querySelector('.fullscreen-btn');
+ const errorMessage = document.getElementById('error-message');
+ const stationButtons = document.querySelectorAll('.station-btn');
+ 
+ let currentStream = 'audio';
+ let isPlaying = false;
+ let ytPlayer;
+ let youtubeAPILoaded = false;
+ let currentStation = 'lofi';
+ 
+ const stations = {
     lofi: {
-        url: 'https://stream.lofi.co/lofi.co',
-        name: 'Lofi Hip Hop Radio'
+        url: 'https://listen.reyfm.de/lofi_128kbps.mp3',
+        name: 'Lo-Fi (reyfm.de 128 kbps)'
     },
     chill: {
-        url: 'https://stream.chillhop.com/morning.mp3',
-        name: 'Chillhop Music'
+        url: 'https://streams.fluxfm.de/Chillhop/mp3-128/streams.fluxfm.de/',
+        name: 'Chillhop Music (FluxFM mp3-128)'
     },
     jazz: {
         url: 'https://jazz-wr04.ice.infomaniak.ch/jazz-wr04-128.mp3',
@@ -40,7 +39,6 @@ const stations = {
     }
 };
 
-// Xato xabarini ko'rsatish
 function showError(message) {
     errorMessage.textContent = message;
     errorMessage.style.display = 'block';
@@ -49,18 +47,15 @@ function showError(message) {
     }, 5000);
 }
 
-// Extract YouTube ID
 function getYouTubeId(url) {
     if (!url) return null;
     if (url.length === 11 && !url.includes(' ')) return url;
     
-    // Turli formatlarni qayta ishlash
     const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
-// YouTube API yuklash
 function loadYouTubeAPI() {
     return new Promise((resolve, reject) => {
         if (window.YT && window.YT.Player) {
@@ -69,9 +64,7 @@ function loadYouTubeAPI() {
             return;
         }
         
-        // Agar allaqachon yuklangan bo'lsa
         if (document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
-            // API yuklanishini kutish
             const checkInterval = setInterval(() => {
                 if (window.YT && window.YT.Player) {
                     clearInterval(checkInterval);
@@ -80,7 +73,6 @@ function loadYouTubeAPI() {
                 }
             }, 100);
             
-            // 5 soniyadan keyin timeout
             setTimeout(() => {
                 clearInterval(checkInterval);
                 if (!window.YT) {
@@ -95,13 +87,11 @@ function loadYouTubeAPI() {
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
         
-        // Global YouTube API ready funktsiyasi
         window.onYouTubeIframeAPIReady = function() {
             youtubeAPILoaded = true;
             resolve();
         };
         
-        // Timeout for API load
         setTimeout(() => {
             if (!youtubeAPILoaded) {
                 reject(new Error('YouTube API load timeout'));
@@ -110,7 +100,6 @@ function loadYouTubeAPI() {
     });
 }
 
-// Play YouTube in background
 function playYouTubeBackground(url) {
     const videoId = getYouTubeId(url);
     if (!videoId) {
@@ -118,14 +107,12 @@ function playYouTubeBackground(url) {
         return;
     }
     
-    // Pause default audio
     if (!audio.paused) {
         audio.pause();
         isPlaying = false;
         playBtn.innerHTML = '<i class="fas fa-play"></i>';
     }
     
-    // YouTube API yuklash va player ishga tushirish
     loadYouTubeAPI()
     .then(() => {
         initYouTubePlayer(videoId);
@@ -133,15 +120,12 @@ function playYouTubeBackground(url) {
     .catch(error => {
         console.error('YouTube API load error:', error);
         showError('YouTube is not available. Using default audio.');
-        // YouTube ishlamasa, default audio ni ishga tushirish
         playStation(currentStation);
     });
 }
 
-// YouTube player ishga tushirish
 function initYouTubePlayer(videoId) {
     try {
-        // Avvalgi player ni yo'q qilish
         if (ytPlayer) {
             try {
                 ytPlayer.destroy();
@@ -150,7 +134,6 @@ function initYouTubePlayer(videoId) {
             }
         }
         
-        // Yangi player yaratish
         ytPlayer = new YT.Player('youtube-iframe', {
             height: '0',
             width: '0',
@@ -161,7 +144,7 @@ function initYouTubePlayer(videoId) {
                 'disablekb': 1,
                 'modestbranding': 1,
                 'playsinline': 1,
-                'origin': window.location.origin // Xatoni oldini olish uchun
+                'origin': window.location.origin
             },
             events: {
                 'onReady': onPlayerReady,
@@ -173,7 +156,6 @@ function initYouTubePlayer(videoId) {
         currentStream = 'youtube';
         currentTrack.textContent = `YouTube: ${videoId}`;
         
-        // YouTube uchun vaqt ko'rsatkichini sozlash
         totalTimeEl.textContent = '∞';
         currentTimeEl.textContent = '0:00';
         progress.style.width = '0%';
@@ -190,11 +172,9 @@ function onPlayerReady(event) {
         isPlaying = true;
         playBtn.innerHTML = '<i class="fas fa-pause"></i>';
         
-        // Ovozni sozlash
         const volume = parseFloat(volumeSlider.value);
         event.target.setVolume(volume * 100);
         
-        // YouTube video davomiyligini olish
         const duration = event.target.getDuration();
         if (duration && duration > 0) {
             totalTimeEl.textContent = formatTime(duration);
@@ -205,7 +185,6 @@ function onPlayerReady(event) {
 }
 
 function onPlayerStateChange(event) {
-    // YouTube player holati o'zgarganda
     if (event.data == YT.PlayerState.ENDED) {
         isPlaying = false;
         playBtn.innerHTML = '<i class="fas fa-play"></i>';
@@ -213,14 +192,12 @@ function onPlayerStateChange(event) {
         isPlaying = true;
         playBtn.innerHTML = '<i class="fas fa-pause"></i>';
         
-        // YouTube video vaqtini yangilash
         setInterval(() => {
             if (ytPlayer && ytPlayer.getCurrentTime) {
                 try {
                     const currentTime = ytPlayer.getCurrentTime();
                     currentTimeEl.textContent = formatTime(currentTime);
                     
-                    // Progress barni yangilash
                     const duration = ytPlayer.getDuration();
                     if (duration > 0) {
                         const progressPercent = (currentTime / duration) * 100;
@@ -243,11 +220,10 @@ function onPlayerError(event) {
     playStation(currentStation);
 }
 
-// Stansiyani ijro etish
 function playStation(stationKey) {
     currentStream = 'audio';
     currentStation = stationKey;
-    
+
     // Faol stansiya tugmasini yangilash
     stationButtons.forEach(btn => {
         if (btn.dataset.station === stationKey) {
@@ -256,28 +232,27 @@ function playStation(stationKey) {
             btn.classList.remove('active');
         }
     });
-    
+
     // Audio manbasini o'zgartirish
     audio.src = stations[stationKey].url;
     currentTrack.textContent = stations[stationKey].name;
-    
+
     // Audio ni yangidan yuklash va ijro etish
     audio.load();
     audio.play()
     .then(() => {
         isPlaying = true;
         playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        totalTimeEl.textContent = '∞'; // Canlı yayın için sonsuzluk işareti
+        totalTimeEl.textContent = '∞'; // Live stream uchun
     })
     .catch(error => {
         console.error('Audio play error:', error);
         isPlaying = false;
         playBtn.innerHTML = '<i class="fas fa-play"></i>';
-        showError('Audio playback error. Please try again.');
+        showError('Audio playback error. Please click Play button manually.');
     });
 }
 
-// Play/Pause toggle
 function togglePlay() {
     if (currentStream === 'youtube') {
         if (!ytPlayer) {
@@ -307,7 +282,6 @@ function togglePlay() {
     }
 }
 
-// Format time
 function formatTime(seconds) {
     if (isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
@@ -315,12 +289,10 @@ function formatTime(seconds) {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
-// Update progress bar
 function updateProgress() {
     if (currentStream === 'audio') {
         const { currentTime, duration } = audio;
         
-        // Canlı yayınlarda duration NaN olabilir
         if (isNaN(duration) || !isFinite(duration)) {
             progress.style.width = '0%';
             currentTimeEl.textContent = formatTime(currentTime);
@@ -336,14 +308,12 @@ function updateProgress() {
     }
 }
 
-// Set progress
 function setProgress(e) {
     if (currentStream === 'audio') {
         const width = this.clientWidth;
         const clickX = e.offsetX;
         const duration = audio.duration;
         
-        // Canlı yayınlarda seek özelliği olmayabilir
         if (isNaN(duration) || !isFinite(duration)) {
             showError('Cannot seek in live stream');
             return;
@@ -363,7 +333,6 @@ function setProgress(e) {
     }
 }
 
-// Volume control
 function setVolume() {
     const volume = volumeSlider.value;
     
@@ -378,7 +347,6 @@ function setVolume() {
     }
 }
 
-// Keyingi stansiyaga o'tish
 function nextStation() {
     const stationKeys = Object.keys(stations);
     const currentIndex = stationKeys.indexOf(currentStation);
@@ -386,7 +354,6 @@ function nextStation() {
     playStation(stationKeys[nextIndex]);
 }
 
-// Oldingi stansiyaga qaytish
 function prevStation() {
     const stationKeys = Object.keys(stations);
     const currentIndex = stationKeys.indexOf(currentStation);
@@ -394,7 +361,6 @@ function prevStation() {
     playStation(stationKeys[prevIndex]);
 }
 
-// Modal toggle
 youtubeBtn.addEventListener('click', () => {
     youtubeModal.style.display = 'flex';
     setTimeout(() => youtubeModal.classList.add('active'), 10);
@@ -409,7 +375,6 @@ function closeModal() {
 closeYoutubeBtn.addEventListener('click', closeModal);
 closeYoutubeTopBtn.addEventListener('click', closeModal);
 
-// Add YouTube
 addYoutubeBtn.addEventListener('click', () => {
     const url = youtubeUrl.value.trim();
     if (url) playYouTubeBackground(url);
@@ -417,7 +382,6 @@ addYoutubeBtn.addEventListener('click', () => {
     youtubeUrl.value = '';
 });
 
-// Enter tugmasi bilan YouTube qo'shish
 youtubeUrl.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const url = youtubeUrl.value.trim();
@@ -427,7 +391,6 @@ youtubeUrl.addEventListener('keypress', (e) => {
     }
 });
 
-// Default audio
 audio.volume = 0.7;
 audio.addEventListener('timeupdate', updateProgress);
 audio.addEventListener('ended', () => {
@@ -439,32 +402,25 @@ audio.addEventListener('error', (e) => {
     showError('Audio stream error. Please try another station.');
 });
 
-// Play button
 playBtn.addEventListener('click', togglePlay);
 
-// Stansiya tugmalari
 stationButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         playStation(btn.dataset.station);
     });
 });
 
-// Next/Previous tugmalari
 nextBtn.addEventListener('click', nextStation);
 prevBtn.addEventListener('click', prevStation);
 
-// Progress bar click
 progressContainer.addEventListener('click', setProgress);
 
-// Volume control
 volumeSlider.addEventListener('input', setVolume);
 
-// Click outside modal closes
 youtubeModal.addEventListener('click', e => {
     if (e.target === youtubeModal) closeModal();
 });
 
-// Keyboard controls
 document.addEventListener('keydown', e => {
     if (e.code === 'Space') {
         e.preventDefault();
@@ -475,7 +431,6 @@ document.addEventListener('keydown', e => {
     else if (e.code === 'ArrowLeft') prevStation();
 });
 
-// Fullscreen
 function toggleFullscreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => console.warn(err));
@@ -488,20 +443,16 @@ function toggleFullscreen() {
 
 fullscreenBtn.addEventListener('click', toggleFullscreen);
 
-// Optional: visual effects
 document.addEventListener('mousemove', e => {
     const x = e.clientX / window.innerWidth;
     const y = e.clientY / window.innerHeight;
-    const gif = document.querySelector('.mona-gif');
+    const gif = document.querySelector('.mone-gif');
     gif.style.transform = `translate(${x*10-5}px, ${y*10-5}px) scale(1.05)`;
 });
 
-// Oldindan YouTube API yuklash
 window.addEventListener('load', () => {
-    // Dastlabki stansiyani ishga tushirish
     playStation(currentStation);
     
-    // Foydalanuvchi YouTube tugmasini bosganda tezroq ishlashi uchun
     youtubeBtn.addEventListener('mouseover', () => {
         if (!youtubeAPILoaded && !window.YT) {
             loadYouTubeAPI().catch(err => console.log('Preload YouTube API failed:', err));
