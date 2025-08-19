@@ -446,7 +446,7 @@ fullscreenBtn.addEventListener('click', toggleFullscreen);
 document.addEventListener('mousemove', e => {
     const x = e.clientX / window.innerWidth;
     const y = e.clientY / window.innerHeight;
-    const gif = document.querySelector('.mone-gif');
+    const gif = document.querySelector('.mona-gif');
     gif.style.transform = `translate(${x*10-5}px, ${y*10-5}px) scale(1.05)`;
 });
 
