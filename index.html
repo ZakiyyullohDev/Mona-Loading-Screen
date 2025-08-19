@@ -3,16 +3,715 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mona Loading Background</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="mona-loading-dark-7701a7b97370.gif" type="image/x-icon">
+    <title>Mona Lofi Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #7289da;
+            --bg-color: #0e0e0e;
+            --text-color: #ffffff;
+            --player-bg: rgba(0, 0, 0, 0.7);
+            --modal-bg: rgba(30, 30, 30, 0.95);
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 10% 20%, rgba(25, 25, 35, 0.7) 0%, rgba(10, 10, 15, 0.9) 90%);
+        }
+        
+        .center {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .mona-gif {
+            width: 300px;
+            height: 300px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 15px rgba(114, 137, 218, 0.4));
+            transition: transform 0.3s ease;
+            border-radius: 50%;
+        }
+        
+        .mona-gif:hover {
+            transform: scale(1.05);
+        }
+        
+        .player-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--player-bg);
+            border-radius: 50px;
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            width: auto;
+            max-width: 90%;
+            min-width: 300px;
+            z-index: 100;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+        
+        .play-btn {
+            background: rgba(114, 137, 218, 0.3);
+            width: 42px;
+            height: 42px;
+            font-size: 18px;
+        }
+        
+        .play-btn:hover {
+            background: rgba(114, 137, 218, 0.5);
+        }
+        
+        .progress-container {
+            flex-grow: 1;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #a6b8ff);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .time-display {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            min-width: 80px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            outline: none;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .volume-slider::-webkit-slider-thumb:hover {
+            background: var(--primary-color);
+            transform: scale(1.2);
+        }
+        
+        .fullscreen-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+        }
+        
+        .fullscreen-btn:hover {
+            background: rgba(114, 137, 218, 0.3);
+        }
+        
+        /* Improved YouTube Modal */
+        .youtube-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .youtube-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .youtube-form {
+            background: var(--modal-bg);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 480px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+        
+        .youtube-modal.active .youtube-form {
+            transform: translateY(0);
+        }
+        
+        .youtube-form h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            text-align: center;
+            font-weight: 600;
+            font-size: 22px;
+        }
+        
+        .youtube-form input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .youtube-form input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 0 2px rgba(114, 137, 218, 0.2);
+        }
+        
+        .youtube-form input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .form-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .youtube-form button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .youtube-form button:hover {
+            background: #8498e6;
+            transform: translateY(-2px);
+        }
+        
+        #close-youtube {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        #close-youtube:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .youtube-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .youtube-btn:hover {
+            background: rgba(114, 137, 218, 0.1);
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 20px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .current-track {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            opacity: 0.8;
+            white-space: nowrap;
+            max-width: 80%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* YouTube iframe container (hidden) */
+        #youtube-iframe {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: none;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        @media (max-width: 600px) {
+            .mona-gif {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .player-container {
+                min-width: 260px;
+                padding: 10px 20px;
+            }
+            
+            .time-display {
+                display: none;
+            }
+            
+            .volume-slider {
+                width: 60px;
+            }
+            
+            .youtube-form {
+                padding: 20px;
+            }
+            
+            .form-buttons {
+                flex-direction: column;
+            }
+            
+            .youtube-form button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
+    <button class="fullscreen-btn" title="Toggle Fullscreen">
+        <i class="fas fa-expand"></i>
+    </button>
 
     <div class="center">
-        <img class="mone-gif" src="mona-loading-dark-7701a7b97370.gif" alt="mona-loading-stealed-from-github">
+        <img class="mona-gif" src="mona-loading-dark-7701a7b97370.gif" alt="Mona Lofi">
     </div>
 
-    <script src="app.js"></script>
+    <div class="current-track" id="current-track">
+        Lofi.co Stream
+    </div>
+
+    <div class="player-container">
+        <button class="control-btn" id="prev-btn" title="Previous">
+            <i class="fas fa-step-backward"></i>
+        </button>
+        
+        <button class="control-btn play-btn" id="play-btn" title="Play/Pause">
+            <i class="fas fa-play"></i>
+        </button>
+        
+        <button class="control-btn" id="next-btn" title="Next">
+            <i class="fas fa-step-forward"></i>
+        </button>
+        
+        <div class="progress-container" id="progress-container">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <div class="time-display">
+            <span id="current-time">0:00</span> / <span id="total-time">0:00</span>
+        </div>
+        
+        <div class="volume-container">
+            <i class="fas fa-volume-up"></i>
+            <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01" value="0.7">
+        </div>
+        
+        <button class="youtube-btn" id="youtube-btn">
+            <i class="fab fa-youtube"></i> YouTube
+        </button>
+    </div>
+
+    <div class="youtube-modal" id="youtube-modal">
+        <div class="youtube-form">
+            <button class="close-modal" id="close-youtube-top">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3>Add YouTube Music</h3>
+            <input type="text" id="youtube-url" placeholder="Paste YouTube URL or Video ID">
+            <div class="form-buttons">
+                <button id="add-youtube">Play</button>
+                <button id="close-youtube">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audio"></audio>
+    <div id="youtube-iframe"></div>
+    
+    <script>
+        const audio = document.getElementById('audio');
+        const playBtn = document.getElementById('play-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progress = document.getElementById('progress');
+        const currentTimeEl = document.getElementById('current-time');
+        const totalTimeEl = document.getElementById('total-time');
+        const volumeSlider = document.getElementById('volume-slider');
+        const youtubeBtn = document.getElementById('youtube-btn');
+        const youtubeModal = document.getElementById('youtube-modal');
+        const youtubeUrl = document.getElementById('youtube-url');
+        const addYoutubeBtn = document.getElementById('add-youtube');
+        const closeYoutubeBtn = document.getElementById('close-youtube');
+        const closeYoutubeTopBtn = document.getElementById('close-youtube-top');
+        const currentTrack = document.getElementById('current-track');
+        const fullscreenBtn = document.querySelector('.fullscreen-btn');
+
+        let currentStream = 'audio';
+        let isPlaying = false;
+        let ytPlayer;
+
+        // YouTube IFrame API yuklanishini kuzatish
+        window.onYouTubeIframeAPIReady = function() {
+            console.log("YouTube API ready");
+        };
+
+        // Extract YouTube ID
+        function getYouTubeId(url) {
+            if (!url) return null;
+            if (url.length === 11 && !url.includes(' ')) return url;
+            
+            // Turli formatlarni qayta ishlash
+            const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        // Play YouTube in background
+        function playYouTubeBackground(url) {
+            const videoId = getYouTubeId(url);
+            if (!videoId) return alert('Invalid YouTube URL or ID');
+
+            // Pause default audio
+            if (!audio.paused) {
+                audio.pause();
+                isPlaying = false;
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+
+            // Agar YouTube player mavjud bo'lmasa, yaratish
+            if (!window.YT) {
+                loadYouTubeAPI().then(() => {
+                    initYouTubePlayer(videoId);
+                });
+            } else if (!ytPlayer) {
+                initYouTubePlayer(videoId);
+            } else {
+                ytPlayer.loadVideoById(videoId);
+                ytPlayer.playVideo();
+            }
+
+            currentStream = 'youtube';
+            isPlaying = true;
+            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            currentTrack.textContent = `YouTube: ${videoId}`;
+        }
+
+        // YouTube API yuklash
+        function loadYouTubeAPI() {
+            return new Promise((resolve) => {
+                if (window.YT && window.YT.Player) {
+                    resolve();
+                    return;
+                }
+                
+                const tag = document.createElement('script');
+                tag.src = "https://www.youtube.com/iframe_api";
+                const firstScriptTag = document.getElementsByTagName('script')[0];
+                firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                
+                window.onYouTubeIframeAPIReady = function() {
+                    resolve();
+                };
+            });
+        }
+
+        // YouTube player ishga tushirish
+        function initYouTubePlayer(videoId) {
+            ytPlayer = new YT.Player('youtube-iframe', {
+                height: '0',
+                width: '0',
+                videoId: videoId,
+                playerVars: {
+                    'autoplay': 1,
+                    'controls': 0,
+                    'disablekb': 1,
+                    'modestbranding': 1,
+                    'playsinline': 1
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            event.target.playVideo();
+            isPlaying = true;
+            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        }
+
+        function onPlayerStateChange(event) {
+            // YouTube player holati o'zgarganda
+            if (event.data == YT.PlayerState.ENDED) {
+                isPlaying = false;
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        }
+
+        // Play/Pause toggle
+        function togglePlay() {
+            if (currentStream === 'youtube') {
+                if (!ytPlayer) return;
+                if (isPlaying) {
+                    ytPlayer.pauseVideo();
+                    isPlaying = false;
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                } else {
+                    ytPlayer.playVideo();
+                    isPlaying = true;
+                    playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }
+            } else {
+                if (audio.paused) {
+                    audio.play();
+                    isPlaying = true;
+                    playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    audio.pause();
+                    isPlaying = false;
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            }
+        }
+
+        // Format time
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            if (currentStream === 'audio') {
+                const { currentTime, duration } = audio;
+                if (isNaN(duration)) return;
+                
+                const progressPercent = (currentTime / duration) * 100;
+                progress.style.width = `${progressPercent}%`;
+                
+                currentTimeEl.textContent = formatTime(currentTime);
+                totalTimeEl.textContent = formatTime(duration);
+            }
+            // YouTube uchun progress boshqarish qo'shish mumkin
+        }
+
+        // Set progress
+        function setProgress(e) {
+            if (currentStream === 'audio') {
+                const width = this.clientWidth;
+                const clickX = e.offsetX;
+                const duration = audio.duration;
+                
+                audio.currentTime = (clickX / width) * duration;
+            }
+        }
+
+        // Volume control
+        function setVolume() {
+            const volume = volumeSlider.value;
+            audio.volume = volume;
+            
+            if (ytPlayer) {
+                ytPlayer.setVolume(volume * 100);
+            }
+        }
+
+        // Modal toggle
+        youtubeBtn.addEventListener('click', () => {
+            youtubeModal.style.display = 'flex';
+            setTimeout(() => youtubeModal.classList.add('active'), 10);
+            youtubeUrl.focus();
+        });
+        
+        function closeModal() {
+            youtubeModal.classList.remove('active');
+            setTimeout(() => youtubeModal.style.display = 'none', 300);
+        }
+        
+        closeYoutubeBtn.addEventListener('click', closeModal);
+        closeYoutubeTopBtn.addEventListener('click', closeModal);
+
+        // Add YouTube
+        addYoutubeBtn.addEventListener('click', () => {
+            const url = youtubeUrl.value.trim();
+            if (url) playYouTubeBackground(url);
+            closeModal();
+            youtubeUrl.value = '';
+        });
+
+        // Default audio
+        audio.src = 'https://stream.lofi.co/lofi.co';
+        audio.volume = 0.7;
+        audio.addEventListener('timeupdate', updateProgress);
+        audio.addEventListener('ended', () => {
+            isPlaying = false;
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        });
+
+        // Play button
+        playBtn.addEventListener('click', togglePlay);
+
+        // Progress bar click
+        progressContainer.addEventListener('click', setProgress);
+
+        // Volume control
+        volumeSlider.addEventListener('input', setVolume);
+
+        // Click outside modal closes
+        youtubeModal.addEventListener('click', e => {
+            if (e.target === youtubeModal) closeModal();
+        });
+
+        // Keyboard controls
+        document.addEventListener('keydown', e => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                togglePlay();
+            } else if (e.code === 'KeyF') toggleFullscreen();
+            else if (e.code === 'Escape' && youtubeModal.classList.contains('active')) closeModal();
+        });
+
+        // Fullscreen
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.warn(err));
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                document.exitFullscreen();
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        }
+
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+        // Optional: visual effects
+        document.addEventListener('mousemove', e => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            const gif = document.querySelector('.mona-gif');
+            gif.style.transform = `translate(${x*10-5}px, ${y*10-5}px) scale(1.05)`;
+        });
+    </script>
 </body>
 </html>
