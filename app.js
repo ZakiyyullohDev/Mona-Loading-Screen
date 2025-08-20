@@ -39,13 +39,13 @@
     }
 };
 
-function showError(message) {
-    errorMessage.textContent = message;
-    errorMessage.style.display = 'block';
-    setTimeout(() => {
-        errorMessage.style.display = 'none';
-    }, 5000);
-}
+// function showError(message) {
+//     errorMessage.textContent = message;
+//     errorMessage.style.display = 'block';
+//     setTimeout(() => {
+//         errorMessage.style.display = 'none';
+//     }, 5000);
+// }
 
 function getYouTubeId(url) {
     if (!url) return null;
@@ -103,7 +103,7 @@ function loadYouTubeAPI() {
 function playYouTubeBackground(url) {
     const videoId = getYouTubeId(url);
     if (!videoId) {
-        showError('Invalid YouTube URL or ID');
+        // showError('Invalid YouTube URL or ID');
         return;
     }
     
@@ -119,7 +119,7 @@ function playYouTubeBackground(url) {
     })
     .catch(error => {
         console.error('YouTube API load error:', error);
-        showError('YouTube is not available. Using default audio.');
+        // showError('YouTube is not available. Using default audio.');
         playStation(currentStation);
     });
 }
@@ -161,7 +161,7 @@ function initYouTubePlayer(videoId) {
         progress.style.width = '0%';
     } catch (error) {
         console.error('YouTube Player init error:', error);
-        showError('YouTube player error. Using default audio.');
+        // showError('YouTube player error. Using default audio.');
         playStation(currentStation);
     }
 }
@@ -216,7 +216,7 @@ function onPlayerStateChange(event) {
 
 function onPlayerError(event) {
     console.error('YouTube Player error:', event.data);
-    showError('Video playback error. Using default audio.');
+    // showError('Video playback error. Using default audio.');
     playStation(currentStation);
 }
 
@@ -249,7 +249,7 @@ function playStation(stationKey) {
         console.error('Audio play error:', error);
         isPlaying = false;
         playBtn.innerHTML = '<i class="fas fa-play"></i>';
-        showError('Audio playback error. Please click Play button manually.');
+        // showError('Audio playback error. Please click Play button manually.');
     });
 }
 
@@ -315,7 +315,7 @@ function setProgress(e) {
         const duration = audio.duration;
         
         if (isNaN(duration) || !isFinite(duration)) {
-            showError('Cannot seek in live stream');
+            // showError('Cannot seek in live stream');
             return;
         }
         
@@ -399,7 +399,7 @@ audio.addEventListener('ended', () => {
 });
 audio.addEventListener('error', (e) => {
     console.error('Audio error:', e);
-    showError('Audio stream error. Please try another station.');
+    // showError('Audio stream error. Please try another station.');
 });
 
 playBtn.addEventListener('click', togglePlay);
