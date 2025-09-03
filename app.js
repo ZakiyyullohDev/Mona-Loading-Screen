@@ -220,11 +220,16 @@ function onPlayerError(event) {
     playStation(currentStation);
 }
 
+// Play stansiya
 function playStation(stationKey) {
     currentStream = 'audio';
     currentStation = stationKey;
 
-    // Faol stansiya tugmasini yangilash
+    localStorage.setItem('lastStream', JSON.stringify({
+        type: 'station',
+        key: stationKey
+    }));
+
     stationButtons.forEach(btn => {
         if (btn.dataset.station === stationKey) {
             btn.classList.add('active');
@@ -233,25 +238,68 @@ function playStation(stationKey) {
         }
     });
 
-    // Audio manbasini o'zgartirish
     audio.src = stations[stationKey].url;
     currentTrack.textContent = stations[stationKey].name;
 
-    // Audio ni yangidan yuklash va ijro etish
     audio.load();
     audio.play()
     .then(() => {
         isPlaying = true;
         playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        totalTimeEl.textContent = '∞'; // Live stream uchun
+        totalTimeEl.textContent = '∞';
     })
     .catch(error => {
         console.error('Audio play error:', error);
         isPlaying = false;
         playBtn.innerHTML = '<i class="fas fa-play"></i>';
-        // showError('Audio playback error. Please click Play button manually.');
     });
 }
+
+// YouTube
+function playYouTubeBackground(url) {
+    const videoId = getYouTubeId(url);
+    if (!videoId) return;
+
+    localStorage.setItem('lastStream', JSON.stringify({
+        type: 'youtube',
+        url: url
+    }));
+
+    if (!audio.paused) {
+        audio.pause();
+        isPlaying = false;
+        playBtn.innerHTML = '<i class="fas fa-play"></i>';
+    }
+
+    loadYouTubeAPI()
+    .then(() => {
+        initYouTubePlayer(videoId);
+    })
+    .catch(error => {
+        console.error('YouTube API load error:', error);
+        playStation(currentStation);
+    });
+}
+
+// Sahifa ochilganda oxirgi qo‘yilgan streamni qayta yuklash
+window.addEventListener('load', () => {
+    const lastStream = JSON.parse(localStorage.getItem('lastStream'));
+    if (lastStream) {
+        if (lastStream.type === 'station') {
+            playStation(lastStream.key);
+        } else if (lastStream.type === 'youtube') {
+            playYouTubeBackground(lastStream.url);
+        }
+    } else {
+        playStation(currentStation);
+    }
+
+    youtubeBtn.addEventListener('mouseover', () => {
+        if (!youtubeAPILoaded && !window.YT) {
+            loadYouTubeAPI().catch(err => console.log('Preload YouTube API failed:', err));
+        }
+    }, { once: true });
+});
 
 function togglePlay() {
     if (currentStream === 'youtube') {
