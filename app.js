@@ -220,16 +220,11 @@ function onPlayerError(event) {
     playStation(currentStation);
 }
 
-// Play stansiya
 function playStation(stationKey) {
     currentStream = 'audio';
     currentStation = stationKey;
 
-    localStorage.setItem('lastStream', JSON.stringify({
-        type: 'station',
-        key: stationKey
-    }));
-
+    // Faol stansiya tugmasini yangilash
     stationButtons.forEach(btn => {
         if (btn.dataset.station === stationKey) {
             btn.classList.add('active');
@@ -238,68 +233,25 @@ function playStation(stationKey) {
         }
     });
 
+    // Audio manbasini o'zgartirish
     audio.src = stations[stationKey].url;
     currentTrack.textContent = stations[stationKey].name;
 
+    // Audio ni yangidan yuklash va ijro etish
     audio.load();
     audio.play()
     .then(() => {
         isPlaying = true;
         playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        totalTimeEl.textContent = '∞';
+        totalTimeEl.textContent = '∞'; // Live stream uchun
     })
     .catch(error => {
         console.error('Audio play error:', error);
         isPlaying = false;
         playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        // showError('Audio playback error. Please click Play button manually.');
     });
 }
-
-// YouTube
-function playYouTubeBackground(url) {
-    const videoId = getYouTubeId(url);
-    if (!videoId) return;
-
-    localStorage.setItem('lastStream', JSON.stringify({
-        type: 'youtube',
-        url: url
-    }));
-
-    if (!audio.paused) {
-        audio.pause();
-        isPlaying = false;
-        playBtn.innerHTML = '<i class="fas fa-play"></i>';
-    }
-
-    loadYouTubeAPI()
-    .then(() => {
-        initYouTubePlayer(videoId);
-    })
-    .catch(error => {
-        console.error('YouTube API load error:', error);
-        playStation(currentStation);
-    });
-}
-
-// Sahifa ochilganda oxirgi qo‘yilgan streamni qayta yuklash
-window.addEventListener('load', () => {
-    const lastStream = JSON.parse(localStorage.getItem('lastStream'));
-    if (lastStream) {
-        if (lastStream.type === 'station') {
-            playStation(lastStream.key);
-        } else if (lastStream.type === 'youtube') {
-            playYouTubeBackground(lastStream.url);
-        }
-    } else {
-        playStation(currentStation);
-    }
-
-    youtubeBtn.addEventListener('mouseover', () => {
-        if (!youtubeAPILoaded && !window.YT) {
-            loadYouTubeAPI().catch(err => console.log('Preload YouTube API failed:', err));
-        }
-    }, { once: true });
-});
 
 function togglePlay() {
     if (currentStream === 'youtube') {
@@ -507,3 +459,64 @@ window.addEventListener('load', () => {
         }
     }, { once: true });
 });
+
+let inactivityTimer;
+const INACTIVITY_DELAY = 3000;
+const TRANSITION = 'transform 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease';
+const playerContainer = document.querySelector('.player-container');
+const trackEl = currentTrack;
+const origPlayerTransform = playerContainer.style.transform || '';
+const origTrackTransform = trackEl.style.transform || '';
+
+function hidePlayerGroup() {
+  const pRect = playerContainer.getBoundingClientRect();
+  const tRect = trackEl.getBoundingClientRect();
+  const offset = Math.ceil(pRect.height + tRect.height + 12);
+  const pComputed = getComputedStyle(playerContainer).transform;
+  const tComputed = getComputedStyle(trackEl).transform;
+  playerContainer.style.transition = TRANSITION;
+  trackEl.style.transition = TRANSITION;
+  playerContainer.style.opacity = '0';
+  trackEl.style.opacity = '0';
+  playerContainer.style.transform = (pComputed === 'none' ? '' : pComputed) + ` translateY(${offset}px)`;
+  trackEl.style.transform = (tComputed === 'none' ? '' : tComputed) + ` translateY(${offset}px)`;
+  playerContainer.classList.add('hidden');
+  trackEl.classList.add('hidden');
+}
+
+function showPlayerGroup() {
+  playerContainer.style.opacity = '1';
+  trackEl.style.opacity = '1';
+  playerContainer.style.transform = origPlayerTransform;
+  trackEl.style.transform = origTrackTransform;
+  playerContainer.classList.remove('hidden');
+  trackEl.classList.remove('hidden');
+}
+
+function resetInactivityTimer() {
+  showPlayerGroup();
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(hidePlayerGroup, INACTIVITY_DELAY);
+}
+
+document.addEventListener('mousemove', resetInactivityTimer);
+document.addEventListener('touchstart', resetInactivityTimer, { passive: true });
+document.addEventListener('touchmove', resetInactivityTimer, { passive: true });
+document.addEventListener('pointerdown', resetInactivityTimer);
+
+playerContainer.addEventListener('mouseenter', () => {
+  clearTimeout(inactivityTimer);
+  showPlayerGroup();
+});
+playerContainer.addEventListener('mouseleave', () => {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(hidePlayerGroup, INACTIVITY_DELAY);
+});
+
+playBtn.addEventListener('click', resetInactivityTimer);
+prevBtn.addEventListener('click', resetInactivityTimer);
+nextBtn.addEventListener('click', resetInactivityTimer);
+volumeSlider.addEventListener('input', resetInactivityTimer);
+stationButtons.forEach(btn => btn.addEventListener('click', resetInactivityTimer));
+
+window.addEventListener('load', resetInactivityTimer);
